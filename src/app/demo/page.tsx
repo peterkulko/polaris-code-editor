@@ -2,10 +2,14 @@
 "use client";
 
 import {  useState } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@clerk/nextjs";
 
 export default function DemoPage() {
+  const { userId } = useAuth();
+
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
 
@@ -29,6 +33,27 @@ export default function DemoPage() {
     setLoading2(false);
   };
 
+  const handleClientError = () => {
+    Sentry.logger.info("User clicked the button, throwing a sample error", { userId });
+    throw new Error("Client error");
+  }
+
+  const handleApiError = async () => {
+    const response = await fetch("/api/demo/error", {
+      method: "POST",
+    });
+    const data = await response.json();
+    console.log(data);
+  }
+
+  const handleInngestError = async () => {
+    const response = await fetch("/api/demo/inngest-error", {
+      method: "POST",
+    });
+    const data = await response.json();
+    console.log(data);
+  }
+
   return (
     <div className="p-8 space-x-4">
       <Button onClick={handleBlocking} disabled={loading}>
@@ -37,6 +62,9 @@ export default function DemoPage() {
       <Button onClick={handleBackground} disabled={loading2}>
         {loading2 ? "Generating..." : "Background"}
       </Button>
+      <Button onClick={handleClientError}>Client Error</Button>
+      <Button onClick={handleApiError}>API Error</Button>
+      <Button onClick={handleInngestError}>Inngest Error</Button>
     </div>
   );
 }
